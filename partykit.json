@@ -1,0 +1,10 @@
+{
+  "$schema": "https://www.partykit.io/schema.json",
+  "name": "cf-auth",
+  "main": "party/server.ts",
+  "compatibilityDate": "2024-05-01",
+  "serve": {
+    "path": "public",
+    "build": "app/client.tsx"
+  }
+}
