@@ -166,5 +166,6 @@ dist
 .yarn/install-state.gz
 .pnp.\*
 
-.partykit
+.wrangler
 .DS_Store
+.dev.vars

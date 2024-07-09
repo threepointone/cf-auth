@@ -3,18 +3,21 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "dev": "partykit dev --live",
-    "deploy": "partykit deploy"
+    "dev": "wrangler dev --local-protocol=https",
+    "deploy": "wrangler deploy"
   },
   "dependencies": {
-    "partysocket": "^1.0.1",
+    "@badgateway/oauth2-client": "^2.3.0",
+    "cookie": "^0.6.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
   },
   "devDependencies": {
+    "@cloudflare/workers-types": "^4.20240620.0",
+    "@types/cookie": "^0.6.0",
     "@types/react": "^18.2.66",
     "@types/react-dom": "^18.2.22",
-    "partykit": "^0.0.100",
-    "typescript": "^5.4.2"
+    "typescript": "^5.4.2",
+    "wrangler": "^3.63.1"
   }
 }

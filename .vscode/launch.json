@@ -3,7 +3,7 @@
     {
       "type": "node",
       "request": "attach",
-      "name": "PartyKit debugger",
+      "name": "wrangler debugger",
       "address": "localhost",
       "port": 9229
     }
