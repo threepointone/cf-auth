@@ -178,7 +178,7 @@ export default {
         );
 
         // This will revoke the token
-        client.revoke(JSON.parse(token));
+        await client.revoke(JSON.parse(token));
 
         return new Response("Logged out", {
           status: 302,
