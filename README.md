@@ -27,7 +27,7 @@ On to the app, there are 3 main URLs:
 
 - `/`: this will redirect to `/login` if not logged in, otherwise will spit out user information
 - `/login`: this will redirect to cloudflare's oauth login page. Once you login, you will be redirected back to `/` with the user information.
-- `/logout`: this will clear the session and redirect to `/`
+- `/logout`: this will clear the session
 
 - Additionally, we've setup `/cf/oauth/callback` to handle the oauth callback. This is the URL that cloudflare will redirect to after the user logs in. This will exchange the code for an access token and store the user information in the session.
 
