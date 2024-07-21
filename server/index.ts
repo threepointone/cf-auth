@@ -3,8 +3,22 @@ import {
   generateCodeVerifier,
   type OAuth2Token,
 } from "@badgateway/oauth2-client";
+import type { ClientSettings } from "@badgateway/oauth2-client/dist/client";
 
 import cookie from "cookie";
+
+// const _fetch = fetch;
+// globalThis.fetch = async function fetch(
+//   request: RequestInfo,
+//   init?: RequestInit
+// ) {
+//   console.log("fetching", request, init);
+//   if (typeof request === "string") {
+//     request = new Request(request, init);
+//   }
+//   const response = await _fetch(request);
+//   return response;
+// };
 
 /**
  * The scopes used by your application. It'll probably be a subset of these.
@@ -31,6 +45,7 @@ const DefaultScopes = {
   "constellation:write": "Manage Constellation projects/models",
   "ai:write": "See and change Workers AI catalog and assets",
   "queues:write": "See and change Cloudflare Queues settings and data",
+  offline_access: "Grants refresh tokens for long-lived access.",
 } as const;
 
 /**
@@ -60,32 +75,42 @@ type Env = {
   CF_OAUTH_CLIENT_SECRET: string;
 };
 
+function getClientDetails(env: Env, withSecret: boolean) {
+  const details: ClientSettings = {
+    // The base URI of your OAuth2 server
+    server: "https://dash.cloudflare.com/",
+
+    // OAuth2 client id
+    clientId: env.CF_OAUTH_CLIENT_ID,
+
+    // OAuth2 client secret.
+    // clientSecret: env.CF_OAUTH_CLIENT_SECRET,
+    // ^ we add this later if we need it.
+
+    // Token endpoint. Most flows need this.
+    tokenEndpoint: "/oauth2/token",
+
+    // Authorization endpoint.
+    authorizationEndpoint: "/oauth2/auth",
+
+    // Revocation endpoint
+    revocationEndpoint: "/oauth2/revoke",
+  };
+
+  // we add the client secret only if we need it.
+  if (withSecret) {
+    details.clientSecret = env.CF_OAUTH_CLIENT_SECRET;
+  }
+  return details;
+}
+
 export default {
   async fetch(request: Request, env: Env) {
-    const client = new OAuth2Client({
-      // The base URI of your OAuth2 server
-      server: "https://dash.cloudflare.com/",
-
-      // OAuth2 client id
-      clientId: env.CF_OAUTH_CLIENT_ID,
-
-      // OAuth2 client secret.
-      clientSecret: env.CF_OAUTH_CLIENT_SECRET,
-
-      // Token endpoint. Most flows need this.
-      tokenEndpoint: "/oauth2/token",
-
-      // Authorization endpoint.
-      authorizationEndpoint: "/oauth2/auth",
-
-      // Revocation endpoint
-      revocationEndpoint: "/oauth2/revoke",
-    });
-
     const url = new URL(request.url);
 
     switch (`${request.method} ${url.pathname}`) {
       case "GET /login": {
+        const client = new OAuth2Client(getClientDetails(env, false));
         // Part of PCKE
         const codeVerifier = await generateCodeVerifier();
 
@@ -118,6 +143,7 @@ export default {
       }
 
       case "GET /oauth/cf/callback": {
+        const client = new OAuth2Client(getClientDetails(env, true));
         var cookies = cookie.parse(request.headers.get("cookie") || "");
         const codeVerifier = cookies.code_verifier;
         const state = cookies.state;
@@ -126,14 +152,6 @@ export default {
           return new Response("No code_verifier or state found", {
             status: 400,
           });
-        }
-
-        const { code } = await client.authorizationCode.validateResponse(url, {
-          state: state,
-        });
-
-        if (!code) {
-          return new Response("No code found", { status: 400 });
         }
 
         // Now we get the actual token from the code.
@@ -151,6 +169,7 @@ export default {
             oauth2Token
           )}; Path=/; Secure; HttpOnly; SameSite=Lax`
         );
+
         // remove code_verifier and state cookies
         headers.append(
           "Set-Cookie",
@@ -169,6 +188,7 @@ export default {
       }
 
       case "GET /logout": {
+        const client = new OAuth2Client(getClientDetails(env, true));
         var cookies = cookie.parse(request.headers.get("cookie") || "");
         const token = cookies.token;
         const headers = new Headers();
@@ -200,7 +220,7 @@ export default {
           });
         }
 
-        // get user info
+        // example authenticated request: get user info
         const user = await fetch("https://api.cloudflare.com/client/v4/user", {
           headers: {
             "Content-Type": "application/json",
